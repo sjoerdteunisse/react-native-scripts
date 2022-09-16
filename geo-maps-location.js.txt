@@ -1,0 +1,88 @@
+import * as React from 'react';
+import { useEffect, useState } from 'react';
+import MapView, { Callout, Circle, Marker } from 'react-native-maps';
+import { StyleSheet, Text, View, Dimensions } from 'react-native';
+
+import * as Location from 'expo-location';
+
+
+export default function App() {
+
+  const [location, setLocation] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
+  const [long, setLong] = useState();
+  const [lat, setlat] = useState();
+
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setErrorMsg('Permission to access location was denied');
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      // setLocation(location);
+      // Setting the longitude and the latitude
+      setLong(location.coords.longitude);
+      setlat(location.coords.latitude);
+    })();
+  }, []);
+
+  let text = 'Waiting..';
+  if (errorMsg) {
+    text = errorMsg;
+  } else if (location) {
+    text = JSON.stringify(location);
+  }
+
+
+  // HERE STARTS THE COMPONENT RENDER
+  
+  return (
+    <View style={styles.container}>
+      <MapView style={styles.map} 
+        initialRegion={{
+        latitude: lat,
+        longitude: long,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+    }}>
+
+      {/* Marker and text info tooltip */}
+      <Marker 
+        coordinate={{
+          latitude: lat,
+          longitude: long
+        }}>
+          <Callout>
+            <Text>I'm here</Text>
+          </Callout>
+        </Marker>
+
+        {/* Circle to determine range */}
+        <Circle 
+          center={{
+            latitude: lat,
+            longitude: long
+          }}
+          radius={500}
+        />
+
+    </MapView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  map: {
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height,
+  },
+});
